@@ -4,7 +4,7 @@ from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
 import base64
 from io import BytesIO
 import os
-
+import uuid 
 
 # # make sure you're logged in with `huggingface-cli login`
 # from torch import autocast
@@ -62,13 +62,15 @@ def inference(model_inputs:dict) -> dict:
     if prompt == None:
         return {'message': "No prompt provided"}
     
+    path = "./static/" + str(uuid.uuid4()) + ".png"
     # Run the model
     with autocast("cuda"):
         images = model([prompt] * 4)["sample"]
         grid = image_grid(images, rows=2, cols=2)
+        grid.save(path)
     buffered = BytesIO()
     grid.save(buffered,format="JPEG")
     image_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     # Return the results as a dictionary
-    return {'image_base64': image_base64}
+    return {'image_base64': image_base64, 'image_path': path[1:]}
